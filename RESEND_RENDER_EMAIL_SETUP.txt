@@ -1,0 +1,57 @@
+RESIDO - RESEND HTTPS EMAIL SETUP FOR RENDER
+
+Why this version exists:
+- Render Free Web Services block outbound SMTP ports.
+- Gmail SMTP uses SMTP ports and can timeout on Render Free.
+- This version sends password reset, email-change, and welcome emails through the Resend HTTPS API.
+
+1) Create a Resend account
+- Go to https://resend.com
+- Create an API key.
+- Copy the key that starts with re_...
+
+2) Add these variables in Render > Resido Web Service > Environment
+
+RESEND_API_KEY=re_your_key_here
+MAIL_FROM="Resido" <onboarding@resend.dev>
+MAIL_REPLY_TO=osamlovechfoosball@gmail.com
+SUPPORT_EMAIL=osamlovechfoosball@gmail.com
+
+For first testing, onboarding@resend.dev is the fastest sender.
+For production, verify residoco.com in Resend and then change MAIL_FROM to:
+
+MAIL_FROM="Resido" <support@residoco.com>
+
+3) Remove old Gmail/SMTP variables from Render if you no longer need them
+- GMAIL_USER
+- GMAIL_APP_PASSWORD
+- SMTP_HOST
+- SMTP_PORT
+- SMTP_USER
+- SMTP_PASS
+- SMTP_SECURE
+- SMTP_REQUIRE_TLS
+
+They are not needed by this version.
+
+4) Keep these domain variables while residoco.com is not connected yet
+
+FRONTEND_ORIGIN=https://resido-dmwu.onrender.com
+PUBLIC_APP_URL=https://resido-dmwu.onrender.com
+
+After Porkbun/residoco.com works, change them back to:
+
+FRONTEND_ORIGIN=https://residoco.com
+PUBLIC_APP_URL=https://residoco.com
+
+5) Redeploy
+- Click Save, rebuild, and deploy.
+- Open /healthz and confirm it returns ok.
+- Test forgot password once.
+- Check inbox, spam/junk, and Resend logs.
+
+6) Production sender
+- Add residoco.com in Resend Domains.
+- Add the DNS records Resend gives you in Porkbun.
+- Wait for Resend domain verification.
+- Then use a sender like support@residoco.com.

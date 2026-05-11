@@ -1,0 +1,80 @@
+RESIDO PRODUCTION READINESS CHECKLIST
+
+This repository folder is clean for GitHub/Render. It intentionally excludes node_modules and any real .env secret file.
+
+GITHUB
+- Upload these files to the repository root.
+- Do not upload node_modules.
+- Do not upload real .env files or real keys/passwords.
+- .env.example is safe to keep in GitHub as a template.
+
+RENDER WEB SERVICE
+- Build Command: npm ci --omit=dev
+- Start Command: npm start
+- Health Check Path: /healthz
+- Environment: Node
+- Attach a Render PostgreSQL database so DATABASE_URL is available.
+
+RENDER REQUIRED ENVIRONMENT VARIABLES
+- NODE_ENV=production
+- AUTH_SECRET: random value, at least 32 characters
+- FRONTEND_ORIGIN: your real HTTPS website URL, for example https://residoco.com
+- PUBLIC_APP_URL: the same HTTPS website URL
+- DATABASE_URL: from Render PostgreSQL Internal Database URL
+- SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, SUPER_ADMIN_NAME
+- Email variables: RESEND_API_KEY, MAIL_FROM, MAIL_REPLY_TO, SUPPORT_EMAIL
+- Stripe variables: STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET
+
+EMAIL
+- This version uses the Resend HTTPS Email API instead of Gmail/SMTP.
+- It works on Render Free because it uses HTTPS, not blocked SMTP ports.
+- In Resend, create an API key and put it in Render as RESEND_API_KEY.
+- For first testing, MAIL_FROM can be "Resido" <onboarding@resend.dev>.
+- For serious production, verify residoco.com in Resend and use "Resido" <support@residoco.com> or another verified sender.
+- Test forgot-password and new-user welcome delivery to Gmail, Outlook/Hotmail, Yahoo, and at least one local provider before launch.
+
+POSTGRESQL / SQL
+- server.js creates and uses the resido_app_state JSONB table automatically when DATABASE_URL exists.
+- resido-schema.sql contains the same production tables and index for manual review/import.
+- In production, do not rely on resido-db.json for real users; use Render PostgreSQL.
+
+STRIPE PAYMENTS
+- The app uses Stripe Checkout for real card / Google Pay compatible payments.
+- The online payment fee is shown before payment in Resido and itemized as a separate line in Stripe Checkout when it applies.
+- Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Render.
+- Stripe webhook endpoint should be: https://yourdomain.com/stripe/webhook
+- For resident monthly building-fee payments, STRIPE_REQUIRE_CONNECT=true means each building needs a Stripe connected account ID like acct_... in the admin payment routing settings.
+- Resido service-fee payments can be paid to the platform Stripe account.
+- Keep ALLOW_DEMO_CARD_PAYMENTS=false in production.
+
+FINAL CHECK BEFORE GOING LIVE
+- Render deploy succeeds.
+- /healthz returns ok.
+- Login works with your real super admin email.
+- Forgot password email arrives to Gmail and non-Gmail test addresses.
+- Creating an admin/resident sends the new-user welcome email.
+- Stripe test checkout works first in Stripe test mode.
+- Stripe webhook shows successful delivery in Stripe dashboard.
+
+ACCESSIBILITY / LOGIN UX
+- Login page keeps the Resido logo stable across Bulgarian/English and desktop/mobile.
+- Keyboard focus states are enabled for buttons, inputs, links, and language controls.
+- Legal/privacy/payment/support links are available from the login screen without adding visual clutter.
+
+SECURITY
+- Login and password-reset routes are rate limited.
+- Forgot-password responses do not reveal whether an email exists.
+- Reset tokens are short-lived and lock after repeated wrong verification-code attempts.
+- Keep AUTH_SECRET private and rotate it if you suspect token exposure.
+- Keep RESEND_API_KEY private and rotate it if exposed.
+
+AUDIT LOG / BACKUPS
+- Manager changes are recorded in the app audit log and can be reviewed from Admin actions > Activity log.
+- Admins/super admins can download a scoped JSON backup from Admin actions > Backup export.
+- Keep exported backup files private; they can contain personal building/resident/payment data.
+- On Render PostgreSQL, also enable scheduled database backups or export snapshots from Render regularly.
+
+LEGAL / PAYMENT TERMS
+- Privacy, Terms, Payments, Refunds, Support, and Security summaries are visible in the app.
+- Have final legal text reviewed for your country/client model before charging real residents.
+- Keep online/card fees clearly shown before the user continues to Stripe Checkout.
